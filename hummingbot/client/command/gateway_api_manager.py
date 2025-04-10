@@ -80,13 +80,23 @@ class GatewayChainApiManager:
         Check if gateway node URL for a chain and network works
         """
         # XXX: This should be removed once nodeAPIKey is deprecated from Gateway service
-        chain_config: Dict[str, Any] = await GatewayHttpClient.get_instance().get_configuration(chain)
+        full_config: Dict[str, Any] = await GatewayHttpClient.get_instance().get_configuration()
+        # Extract the chain-specific config from the full config
+        chain_config = full_config.get(chain)
         if chain_config is not None:
             networks: Optional[Dict[str, Any]] = chain_config.get("networks")
             if networks is not None:
                 network_config: Optional[Dict[str, Any]] = networks.get(network)
                 if network_config is not None:
-                    node_url: Optional[str] = network_config.get("nodeURL")
+                    node_url: Optional[str] = None
+                    if chain.lower() == "solana":
+                        node_urls_str = network_config.get("nodeURLs", "")
+                        # Split the comma-delimited string into an array
+                        node_urls = [url.strip() for url in node_urls_str.split(",") if url.strip()]
+                        node_url = node_urls[0] if node_urls else None
+                    else:
+                        node_url = network_config.get("nodeURL")
+
                     if not attempt_connection:
                         while True:
                             change_node: str = await self.app.prompt(prompt=f"Do you want to continue to use node url '{node_url}' for {chain}-{network}? (Yes/No) ")
@@ -127,17 +137,28 @@ class GatewayChainApiManager:
         """
         Update a chain and network's node URL in gateway
         """
-        await GatewayHttpClient.get_instance().update_config(f"{chain}.networks.{network}.nodeURL", node_url)
+        if chain.lower() == "solana":
+            # For Solana, we update the nodeURLs field with the node_url as a string
+            await GatewayHttpClient.get_instance().update_config(f"{chain}.networks.{network}.nodeURLs", node_url)
+        else:
+            # For other chains, update nodeURL as before
+            await GatewayHttpClient.get_instance().update_config(f"{chain}.networks.{network}.nodeURL", node_url)
 
     async def _get_native_currency_symbol(self, chain: str, network: str) -> Optional[str]:
         """
         Get the native currency symbol for a chain and network from gateway config
         """
-        chain_config: Dict[str, Any] = await GatewayHttpClient.get_instance().get_configuration(chain)
+        full_config: Dict[str, Any] = await GatewayHttpClient.get_instance().get_configuration()
+        # Extract the chain-specific config from the full config
+        chain_config = full_config.get(chain)
+
         if chain_config is not None:
             networks: Optional[Dict[str, Any]] = chain_config.get("networks")
+
             if networks is not None:
                 network_config: Optional[Dict[str, Any]] = networks.get(network)
+
                 if network_config is not None:
                     return network_config.get("nativeCurrencySymbol")
+
         return None

@@ -234,6 +234,7 @@ class GatewayCommand(GatewayChainApiManager):
                 available_networks: List[Dict[str, Any]
                                          ] = connector_config[0]["available_networks"]
                 trading_type: str = connector_config[0]["trading_type"][0]
+                chain_type: str = connector_config[0]["chain_type"]
                 additional_prompts: Dict[str, str] = connector_config[0].get(  # These will be stored locally.
                     # If Gateway requires additional, prompts with secure info,
                     "additional_add_wallet_prompts",
@@ -326,6 +327,7 @@ class GatewayCommand(GatewayChainApiManager):
                     # they use an existing wallet
                     if use_existing_wallet is not None and use_existing_wallet in ["Y", "y", "Yes", "yes"]:
                         native_token: str = await self._get_native_currency_symbol(chain, network)
+                        self.notify(f"Native token: {native_token}")
                         wallet_table: List[Dict[str, Any]] = []
                         for w in wallets:
                             balances: Dict[str, Any] = await self._get_gateway_instance().get_balances(
@@ -387,6 +389,7 @@ class GatewayCommand(GatewayChainApiManager):
                     chain=chain,
                     network=network,
                     trading_type=trading_type,
+                    chain_type=chain_type,
                     wallet_address=wallet_address,
                     additional_prompt_values=additional_prompt_values,
                 )
