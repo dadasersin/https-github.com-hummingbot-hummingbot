@@ -494,6 +494,11 @@ class BinanceUSRateSourceMode(ExchangeRateSourceModeBase):
     model_config = ConfigDict(title="binance_us")
 
 
+class MexcRateSourceMode(ExchangeRateSourceModeBase):
+    name: str = Field(default="mexc")
+    model_config = ConfigDict(title="mexc")
+
+
 class CubeRateSourceMode(ExchangeRateSourceModeBase):
     name: str = Field(default="cube")
     model_config = ConfigDict(title="cube")
@@ -643,6 +648,7 @@ RATE_SOURCE_MODES = {
     HyperliquidRateSourceMode.model_config["title"]: HyperliquidRateSourceMode,
     DeriveRateSourceMode.model_config["title"]: DeriveRateSourceMode,
     TegroRateSourceMode.model_config["title"]: TegroRateSourceMode,
+    MexcRateSourceMode.model_config["title"]: MexcRateSourceMode,
 }
 
 
